@@ -93,7 +93,7 @@ public class Main {
      * returns the winner of the board if any:
      * -1 is for O;
      * +1 is for X;
-     *  0 is for tie.
+     * 0 is for tie.
      */
     private static byte getWinner(Board board) {
         byte boardSize = (byte) board.cell.length;
