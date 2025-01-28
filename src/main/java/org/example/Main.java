@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
+    private final static byte X = 1;
+    private final static byte O = -1;
+    public final static byte BOARD_SIZE = 3;
+
     public static void main(String[] args) {
         Board board = new Board();
         byte humanChoice = getHumanChoice();
@@ -26,7 +30,7 @@ public class Main {
         if (winner == 0) {
             System.out.println("It's a tie!");
         } else {
-            System.out.println("The winner is " + (winner == 1 ? "X" : "O"));
+            System.out.println("The winner is " + (winner == X ? "X" : "O"));
         }
 
     }
@@ -39,9 +43,9 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         String choice = scanner.nextLine();
         if (choice.equalsIgnoreCase("X")) {
-            return 1;
+            return X;
         } else if (choice.equalsIgnoreCase("O")) {
-            return -1;
+            return O;
         } else {
             System.out.println("Invalid choice. Please choose X or O.");
             return getHumanChoice();
@@ -54,20 +58,19 @@ public class Main {
     private static byte nextPlayer(Board board) {
         byte totalX = 0;
         byte totalO = 0;
-        for (byte[] row : board.cell) {
-            for (byte cell : row) {
-                if (cell == -1) {
-                    totalO++;
-                } else if (cell == 1) {
-                    totalX++;
-                }
+
+        for (Cell cell : board.cellsNew) {
+            if (cell.value == X) {
+                totalX++;
+            } else if (cell.value == O) {
+                totalO++;
             }
         }
 
         if (totalO == totalX) {
-            return 1;
+            return X;
         }
-        return -1;
+        return O;
     }
 
     /**
@@ -78,11 +81,9 @@ public class Main {
             return true;
         }
 
-        for (byte[] row : board.cell) {
-            for (byte cell : row) {
-                if (cell == 0) {
-                    return false;
-                }
+        for (Cell cell : board.cellsNew) {
+            if (cell.value == 0) {
+                return false;
             }
         }
 
@@ -96,7 +97,8 @@ public class Main {
      * 0 is for tie.
      */
     private static byte getWinner(Board board) {
-        byte boardSize = (byte) board.cell.length;
+        // FIXME: review this method
+        byte boardSize = (byte) board.cellsNew.length;
         //first element is for X, second is for O
         byte[] mainDiagonal = {0, 0};
         byte[] secondaryDiagonal = {0, 0};
@@ -167,34 +169,38 @@ public class Main {
      * displays the board
      */
     private static void displayBoard(Board board) {
-        for (byte[] row : board.cell) {
-            for (byte cell : row) {
-                String symbol;
-                switch (cell) {
-                    case -1 -> symbol = "O";
-                    case 1 -> symbol = "X";
-                    default -> symbol = " ";
-                }
-
-                System.out.print("[" + symbol + "]");
+        for (Cell cell : board.cellsNew) {
+            String cellSymbol;
+            switch (cell.value) {
+                case X -> cellSymbol = "[X]";
+                case O -> cellSymbol = "[O]";
+                default -> cellSymbol = "[ ]";
             }
-            System.out.println();
+
+            System.out.print(cellSymbol);
+            if (cell.getCol() == BOARD_SIZE - 1) {
+                System.out.println();
+            }
+
         }
     }
 
     /**
      * return the board after the move was made. The move is a byte[row, col]
      */
-    private static Board getBoardAfterMove(Board board, Byte[] move) {
-        byte row = move[0];
-        byte col = move[1];
-
-        if (board.cell[row][col] != 0) {
-            throw new RuntimeException("The cell " + row + ", " + col + "is already occupied.");
+    private static Board getBoardAfterMove(Board board, Cell move) {
+        if (board.cellsNew[move.index].value != 0) {
+            throw new RuntimeException("The cell " + move.getRow() + ", " + move.getCol() + "is already occupied.");
         }
 
-        Board boardAfterMove = new Board(board.deepCopy().cell);
-        boardAfterMove.cell[row][col] = nextPlayer(board);
+        // TODO: check deepCopy operation here
+        Board boardAfterMove = board.deepCopy();
+        boardAfterMove.cellsNew[move.index].value = nextPlayer(board);
+
+        System.out.println("IF two boards below are identical, then board.deepCopy method is not working " +
+                "\nand should be rewritten==============!");
+        displayBoard(board);
+        displayBoard(boardAfterMove);
 
         return boardAfterMove;
     }
@@ -211,16 +217,16 @@ public class Main {
         do {
             System.out.println("Enter next move.");
             do {
-                System.out.print("Row (0 - " + (board.cell.length - 1) + "): ");
+                System.out.print("Row (0 - " + (BOARD_SIZE - 1) + "): ");
                 row = scanner.nextByte();
-            } while (row < 0 || row > 2);
+            } while (row < 0 || row > BOARD_SIZE - 2);
 
             do {
-                System.out.print("Column (0 - " + (board.cell.length - 1) + "): ");
+                System.out.print("Column (0 - " + (BOARD_SIZE - 1) + "): ");
                 column = scanner.nextByte();
-            } while (column < 0 || column > 2);
+            } while (column < 0 || column > BOARD_SIZE - 2);
 
-            if (board.cell[row][column] == 0) {
+            if (board.cellsNew[row * BOARD_SIZE + column].value == 0) {
                 isMovePossible = true;
             } else {
                 System.out.println("This cell is used.");
@@ -228,65 +234,60 @@ public class Main {
             }
         } while (!isMovePossible);
 
-        return getBoardAfterMove(board, new Byte[]{row, column});
+        return getBoardAfterMove(board, new Cell(row, column, (byte) 0));
     }
 
     /**
      * returns all possible moves for the board as an ArrayList of Bytes[] [row, col]
      */
-    private static ArrayList<Byte[]> getPossibleMoves(Board board) {
-        byte boardSize = (byte) board.cell.length;
-        ArrayList<Byte[]> possibleMoves = new ArrayList<>();
-
-        for (byte row = 0; row < boardSize; row++) {
-            for (byte col = 0; col < boardSize; col++) {
-                if (board.cell[row][col] == 0) {
-                    possibleMoves.add(new Byte[]{row, col});
-                }
+    private static ArrayList<Cell> getPossibleMoves(Board board) {
+        ArrayList<Cell> possibleMovesCell = new ArrayList<>();
+        for (Cell cell : board.cellsNew) {
+            if (cell.value == 0) {
+                possibleMovesCell.add(cell);
             }
         }
 
-        return possibleMoves;
+        return possibleMovesCell;
     }
 
     /**
      * minimax
      */
-    private static Byte[] minimax(Board board) {
-        Byte[] result;
+    private static Cell minimax(Board board) {
+        Cell result;
         if (nextPlayer(board) == 1) {
-            result = maximize(board, (byte) 2);
+            result = maximize(board, (byte) 2).cell();
         } else {
-            result = minimize(board, (byte) -2);
+            result = minimize(board, (byte) -2).cell();
         }
 
-        return new Byte[]{result[1], result[2]};
+        return result;
     }
 
     /**
      * maximize
      */
-    private static Byte[] maximize(Board board, byte minimum) {
+    private static ResultWithCell maximize(Board board, byte minimum) {
         if (isTerminal(board)) {
-            return new Byte[]{getWinner(board), null, null};
+            return new ResultWithCell(getWinner(board), null);
         }
 
-        Byte[] v = {-2, null, null};
-        ArrayList<Byte[]> possibleMoves = getPossibleMoves(board);
-        for (Byte[] move : possibleMoves) {
+//        Byte[] v = {-2, null, null};
+        ResultWithCell v = new ResultWithCell((byte) -2, null);
+        ArrayList<Cell> possibleMoves = getPossibleMoves(board);
+        for (Cell move : possibleMoves) {
             Board newBoard = getBoardAfterMove(board, move);
-            Byte[] result = minimize(newBoard, v[0]);
+            ResultWithCell result = minimize(newBoard, v.result());
+            byte resultValue = result.result();
 
-            if (result[0] > minimum) {
-                result[1] = move[0];
-                result[2] = move[1];
+            if (resultValue > minimum) {
+                result = new ResultWithCell(resultValue, move);
                 return result;
             }
 
-            if (result[0] > v[0]) {
-                v[0] = result[0];
-                v[1] = move[0];
-                v[2] = move[1];
+            if (resultValue > v.result()) {
+                v = result;
             }
         }
 
@@ -296,30 +297,29 @@ public class Main {
     /**
      * minimize
      */
-    private static Byte[] minimize(Board board, byte maximum) {
+    private static ResultWithCell minimize(Board board, byte maximum) {
         if (isTerminal(board)) {
-            return new Byte[]{getWinner(board), null, null};
+            return new ResultWithCell(getWinner(board), null);
         }
 
-        Byte[] minimum = {2, null, null};
-        ArrayList<Byte[]> possibleMoves = getPossibleMoves(board);
-        for (Byte[] move : possibleMoves) {
+//        Byte[] minimum = {2, null, null};
+        ResultWithCell v = new ResultWithCell((byte) 2, null);
+        ArrayList<Cell> possibleMoves = getPossibleMoves(board);
+        for (Cell move : possibleMoves) {
             Board newBoard = getBoardAfterMove(board, move);
-            Byte[] result = maximize(newBoard, minimum[0]);
+            ResultWithCell result = maximize(newBoard, v.result());
+            byte resultValue = result.result();
 
-            if (result[0] < maximum) {
-                result[1] = move[0];
-                result[2] = move[1];
+            if (resultValue < maximum) {
+                result = new ResultWithCell(resultValue, move);
                 return result;
             }
 
-            if (result[0] < minimum[0]) {
-                minimum[0] = result[0];
-                minimum[1] = move[0];
-                minimum[2] = move[1];
+            if (resultValue < v.result()) {
+                v = result;
             }
         }
 
-        return minimum;
+        return v;
     }
 }

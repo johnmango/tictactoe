@@ -1,32 +1,33 @@
 package org.example;
 
 public class Board {
-    byte[][] cell;
+    Cell[] cellsNew = new Cell[9];
 
-    public Board(byte[][] cells) {
-        for (byte[] row : cells) {
-            for (int cell : row) {
-                if (cell < -1 || cell > 1) {
-                    throw new RuntimeException("Cell value is " + cell + ". Allowed values only -1, 0, 1");
-                }
-            }
+    public Board(byte[] cells) {
+        if (cells.length != 9) {
+            throw new RuntimeException("Invalid cell count. Expected 9, got " + cells.length);
         }
 
-        this.cell = cells;
+        for (byte i = 0; i < 9; i++) {
+            if (cells[i] < -1 || cells[i] > 1) {
+                throw new RuntimeException("Cell value is " + cells[i] + ". Allowed values only -1, 0, 1");
+            }
+
+            this.cellsNew[i] = new Cell(i, cells[i]);
+        }
+
     }
 
     public Board() {
-        this.cell = new byte[][]{{0, 0, 0},
-                {0, 0, 0},
-                {0, 0, 0}};
+        this(new byte[9]);
+    }
+
+    public Board(Cell[] cells) {
+        this.cellsNew = cells;
     }
 
     public Board deepCopy() {
-        byte boardSize = (byte) this.cell.length;
-        byte[][] newCells = new byte[boardSize][boardSize];
-        for (int i = 0; i < boardSize; i++) {
-            newCells[i] = this.cell[i].clone();
-        }
+        Cell[] newCells = this.cellsNew.clone();
 
         return new Board(newCells);
     }
