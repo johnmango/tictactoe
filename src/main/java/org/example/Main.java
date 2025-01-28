@@ -97,18 +97,16 @@ public class Main {
      * 0 is for tie.
      */
     private static byte getWinner(Board board) {
-        // FIXME: review this method
-        byte boardSize = (byte) board.cellsNew.length;
         //first element is for X, second is for O
         byte[] mainDiagonal = {0, 0};
         byte[] secondaryDiagonal = {0, 0};
-        byte[][] columnTotal = new byte[2][boardSize];
+        byte[][] columnTotal = new byte[2][BOARD_SIZE];
 
-        for (byte row = 0; row < boardSize; row++) {
+        for (byte row = 0; row < BOARD_SIZE; row++) {
             byte[] rowTotal = {0, 0};
 
-            for (byte col = 0; col < boardSize; col++) {
-                byte cell = board.cell[row][col];
+            for (byte col = 0; col < BOARD_SIZE; col++) {
+                byte cell = board.cellsNew[row * BOARD_SIZE + col].value;
                 byte playerIndex;
 
                 if (cell == 0) {
@@ -128,15 +126,15 @@ public class Main {
                     mainDiagonal[playerIndex]++;
                 }
 
-                if (row + col == boardSize - 1) {
+                if (row + col == BOARD_SIZE - 1) {
                     secondaryDiagonal[playerIndex]++;
                 }
             }
 
-            if (rowTotal[0] == boardSize) {
+            if (rowTotal[0] == BOARD_SIZE) {
                 return 1;
             }
-            if (rowTotal[1] == boardSize) {
+            if (rowTotal[1] == BOARD_SIZE) {
                 return -1;
             }
         }
@@ -149,12 +147,12 @@ public class Main {
                 winnerIndex = -1;
             }
 
-            if (mainDiagonal[i] == boardSize || secondaryDiagonal[i] == boardSize) {
+            if (mainDiagonal[i] == BOARD_SIZE || secondaryDiagonal[i] == BOARD_SIZE) {
                 return winnerIndex;
             }
 
-            for (byte column = 0; column < boardSize; column++) {
-                if (columnTotal[i][column] == boardSize) {
+            for (byte column = 0; column < BOARD_SIZE; column++) {
+                if (columnTotal[i][column] == BOARD_SIZE) {
                     return winnerIndex;
                 }
 
@@ -190,17 +188,11 @@ public class Main {
      */
     private static Board getBoardAfterMove(Board board, Cell move) {
         if (board.cellsNew[move.index].value != 0) {
-            throw new RuntimeException("The cell " + move.getRow() + ", " + move.getCol() + "is already occupied.");
+            throw new RuntimeException("The cell " + move.getRow() + ", " + move.getCol() + " is already occupied.");
         }
 
-        // TODO: check deepCopy operation here
         Board boardAfterMove = board.deepCopy();
         boardAfterMove.cellsNew[move.index].value = nextPlayer(board);
-
-        System.out.println("IF two boards below are identical, then board.deepCopy method is not working " +
-                "\nand should be rewritten==============!");
-        displayBoard(board);
-        displayBoard(boardAfterMove);
 
         return boardAfterMove;
     }
@@ -219,12 +211,12 @@ public class Main {
             do {
                 System.out.print("Row (0 - " + (BOARD_SIZE - 1) + "): ");
                 row = scanner.nextByte();
-            } while (row < 0 || row > BOARD_SIZE - 2);
+            } while (row < 0 || row > BOARD_SIZE - 1);
 
             do {
                 System.out.print("Column (0 - " + (BOARD_SIZE - 1) + "): ");
                 column = scanner.nextByte();
-            } while (column < 0 || column > BOARD_SIZE - 2);
+            } while (column < 0 || column > BOARD_SIZE - 1);
 
             if (board.cellsNew[row * BOARD_SIZE + column].value == 0) {
                 isMovePossible = true;
@@ -270,7 +262,7 @@ public class Main {
      */
     private static ResultWithCell maximize(Board board, byte minimum) {
         if (isTerminal(board)) {
-            return new ResultWithCell(getWinner(board), null);
+            return new ResultWithCell(getWinner(board), new Cell((byte) 0, (byte) 0));
         }
 
 //        Byte[] v = {-2, null, null};
@@ -299,7 +291,7 @@ public class Main {
      */
     private static ResultWithCell minimize(Board board, byte maximum) {
         if (isTerminal(board)) {
-            return new ResultWithCell(getWinner(board), null);
+            return new ResultWithCell(getWinner(board), new Cell((byte) 0, (byte) 0));
         }
 
 //        Byte[] minimum = {2, null, null};

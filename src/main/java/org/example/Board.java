@@ -27,7 +27,11 @@ public class Board {
     }
 
     public Board deepCopy() {
-        Cell[] newCells = this.cellsNew.clone();
+        Cell[] newCells = new Cell[this.cellsNew.length];
+
+        for (byte i = 0; i < this.cellsNew.length; i++) {
+            newCells[i] = new Cell(i, this.cellsNew[i].value);
+        }
 
         return new Board(newCells);
     }
