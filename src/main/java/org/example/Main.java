@@ -3,6 +3,7 @@ package org.example;
 import java.util.Scanner;
 
 public class Main {
+    private static final byte MAX_BOARD_SIZE = Board.BOARD_SIZE;
     public static void main(String[] args) {
         Board board = new Board();
         byte humanChoice = getHumanChoice();
@@ -14,7 +15,6 @@ public class Main {
             if (currentPlayer == humanChoice) {
                 board = askForNextMove(board);
             } else {
-                System.out.println("Computer is thinking...");
                 board = board.getBoardAfterMove(Game.minimax(board));
             }
         }
@@ -58,14 +58,14 @@ public class Main {
         do {
             System.out.println("Enter next move.");
             do {
-                System.out.print("Row (0 - " + (Board.BOARD_SIZE - 1) + "): ");
+                System.out.print("Row (0 - " + (MAX_BOARD_SIZE) + "): ");
                 row = scanner.nextByte();
-            } while (row < 0 || row > 2);
+            } while (row < 0 || row > MAX_BOARD_SIZE);
 
             do {
-                System.out.print("Column (0 - " + (Board.BOARD_SIZE- 1) + "): ");
+                System.out.print("Column (0 - " + (MAX_BOARD_SIZE) + "): ");
                 column = scanner.nextByte();
-            } while (column < 0 || column > 2);
+            } while (column < 0 || column > MAX_BOARD_SIZE);
 
             playerMove = new Move(row, column, board.getNextPlayer());
             if (board.moveIsNotPossible(playerMove)) {

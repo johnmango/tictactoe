@@ -13,9 +13,12 @@ public class Game {
         byte extremeValue = (byte) (nextPlayer * -1);
 
         Move[] possibleMovesMoves = board.getPossibleMoves();
+        byte totalPossibleMoves = (byte) possibleMovesMoves.length;
         Move resultMove = null;
 
-        for (Move move : possibleMovesMoves) {
+        for (int i = 0; i < totalPossibleMoves; i++) {
+            System.out.print("Computer is thinking... " + (i + 1) + "/" + totalPossibleMoves + "\r");
+            Move move = possibleMovesMoves[i];
             Board newBoard = board.getBoardAfterMove(move);
 
             if (nextPlayer == 1) {
@@ -42,6 +45,7 @@ public class Game {
                 }
             }
         }
+        System.out.print("\n");
 
         return resultMove;
     }
