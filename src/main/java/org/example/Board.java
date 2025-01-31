@@ -21,14 +21,6 @@ public class Board {
             throw new RuntimeException("Invalid board size. Expected: " + BOARD_SIZE + "; Got: " + cells.length);
         }
 
-        for (byte[] row : cells) {
-            for (int cell : row) {
-                if (cell < -1 || cell > 1) {
-                    throw new RuntimeException("Cell value is " + cell + ". Allowed values only -1, 0, 1");
-                }
-            }
-        }
-
         this.cell = cells;
     }
 
@@ -46,7 +38,7 @@ public class Board {
             throw new RuntimeException("Cell is occupied! [" + move.row + ";" + move.col);
         }
 
-        Board boardAfterMove = this.getDeepCopyWithMove(move);
+        Board boardAfterMove = this.getDeepCopyWithNewMove(move);
         boardAfterMove.availableCells--;
 
         if (move.row == move.col) {
@@ -65,15 +57,20 @@ public class Board {
     /**
      * Method returns deep copy of board with new move
      */
-    private Board getDeepCopyWithMove(Move move) {
+    private Board getDeepCopyWithNewMove(Move move) {
         byte[][] newCells = new byte[BOARD_SIZE][BOARD_SIZE];
         for (int i = 0; i < BOARD_SIZE; i++) {
             newCells[i] = this.cell[i].clone();
         }
 
         newCells[move.row][move.col] = this.getNextPlayer();
+        Board newBoard = new Board(newCells);
 
-        return new Board(newCells);
+        newBoard.availableCells = this.availableCells;
+        newBoard.mainDiagonal = this.mainDiagonal;
+        newBoard.auxDiagonal = this.auxDiagonal;
+
+        return newBoard;
     }
 
     /**
@@ -81,12 +78,13 @@ public class Board {
      * i.e. no moves left or someone has won. Parameter 'move' is the last move made on this board.
      */
     private void checkWinner(Move move) {
-        if (this.availableCells == 0) {
-            this.isTerminal = true;
-        }
-
         if (Math.abs(mainDiagonal) == BOARD_SIZE || Math.abs(auxDiagonal) == BOARD_SIZE) {
             this.winner = move.value;
+            this.isTerminal = true;
+            return;
+        }
+
+        if (this.availableCells == 0) {
             this.isTerminal = true;
         }
 
@@ -110,7 +108,6 @@ public class Board {
         this.winner = move.value;
         this.isTerminal = true;
     }
-
 
     /**
      * Method returns who is the next to make a move on the board
@@ -162,10 +159,11 @@ public class Board {
 
         Move[] possibleMoves = new Move[availableCells];
         byte possibleMovesIndex = 0;
+        byte nextPlayer = this.getNextPlayer();
         for (byte row = 0; row < BOARD_SIZE; row++) {
             for (byte col = 0; col < BOARD_SIZE; col++) {
                 if (cell[row][col] == 0) {
-                    possibleMoves[possibleMovesIndex++] = new Move(row, col, (byte) 0);
+                    possibleMoves[possibleMovesIndex++] = new Move(row, col, nextPlayer);
                 }
             }
         }

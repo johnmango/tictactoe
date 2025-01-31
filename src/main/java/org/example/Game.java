@@ -1,10 +1,6 @@
 package org.example;
 
 public class Game {
-    private static final byte X = 1;
-    private static final byte O = -1;
-    private static final byte BOARD_SIZE = Board.BOARD_SIZE;
-
     /**
      * Returns best of all possible moves.
      */
@@ -22,17 +18,27 @@ public class Game {
         for (Move move : possibleMovesMoves) {
             Board newBoard = board.getBoardAfterMove(move);
 
-            if (nextPlayer == X) {
-                move.value = maximize(newBoard, (byte) 0);
+            if (nextPlayer == 1) {
+                move.value = minimize(newBoard, (byte) 0);
                 if (move.value > extremeValue) {
                     extremeValue = move.value;
                     resultMove = move;
+
+                    // optimization:
+                    if (move.value == 1) {
+                        return resultMove;
+                    }
                 }
             } else {
-                move.value = minimize(newBoard, (byte) 0);
+                move.value = maximize(newBoard, (byte) 0);
                 if (move.value < extremeValue) {
                     extremeValue = move.value;
                     resultMove = move;
+
+                    // optimization:
+                    if (move.value == -1) {
+                        return resultMove;
+                    }
                 }
             }
         }

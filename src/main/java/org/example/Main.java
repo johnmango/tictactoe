@@ -67,7 +67,7 @@ public class Main {
                 column = scanner.nextByte();
             } while (column < 0 || column > 2);
 
-            playerMove = new Move(row, column, (byte) 0);
+            playerMove = new Move(row, column, board.getNextPlayer());
             if (board.moveIsNotPossible(playerMove)) {
                 System.out.println("This cell is used.");
                 playerMove.value = 55;
