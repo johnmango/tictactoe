@@ -25,9 +25,7 @@ public class Board {
     }
 
     public Board() {
-        this.cell = new byte[][]{{0, 0, 0},
-                                {0, 0, 0},
-                                {0, 0, 0}};
+        this.cell = new byte[BOARD_SIZE][BOARD_SIZE];
     }
 
     /**
